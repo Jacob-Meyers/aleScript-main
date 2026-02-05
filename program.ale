@@ -1,6 +1,9 @@
 @SET_SPLAR?"`
 
-println`"Calculator Made with AleScript
+input`"~> `
+var`in
+
+if`in`"==`"test`"6
 
 @REP_IGNORE
 
@@ -8,4 +11,5 @@ println`"TEST
 
 @REP
 
--<skipiffalse
+
+println`"TEST2
