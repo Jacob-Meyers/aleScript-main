@@ -50,19 +50,33 @@ void Interpreter::run() {
 
 vector<string> Interpreter::split(const string& line, char delimiter) {
     vector<string> result;
-    stringstream ss(line);
-    string item;
-    while (getline(ss, item, delimiter)) {
-        if (item.empty() || item.front() != '"') {
+    result.reserve(8);
+    size_t start = 0;
+    size_t pos = line.find(delimiter, start);
+    
+    while (pos != string::npos) {
+        string item = line.substr(start, pos - start);
+        if (!item.empty() && item.front() != '"') {
             trim(item);
         }
         result.push_back(item);
+        start = pos + 1;
+        pos = line.find(delimiter, start);
     }
+    
+    string item = line.substr(start);
+    if (!item.empty() && item.front() != '"') {
+        trim(item);
+    }
+    result.push_back(item);
+    
     return result;
 }
 
 void Interpreter::trim(string& str) {
-    while (!str.empty() && isspace(str.front())) str.erase(str.begin());
-    while (!str.empty() && isspace(str.back())) str.pop_back();
+    size_t start = 0;
+    size_t end = str.length();
+    while (start < end && isspace(str[start])) start++;
+    while (end > start && isspace(str[end - 1])) end--;
+    str = str.substr(start, end - start);
 }
-

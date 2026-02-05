@@ -33,7 +33,9 @@ static const unordered_map<string, function<void(Interpreter*, const vector<stri
 
 void Interpreter::executeLine(const string& line) {
     variables["LAST_RETURNED"] = lastReturned;
-    
+
+
+    if (!pcLookingFor.empty()) { if (pcLookingFor!=line) return; } { if (pcLookingFor==line) pcLookingFor=""; }
     auto csline = split(line, SPLAR);
    
     if (csline.empty() || csline[0].rfind("//", 0) == 0 || csline[0].rfind("-<", 0) == 0) return;
@@ -191,6 +193,7 @@ void Interpreter::executeIfStatement(const vector<string>& csline) {
     string in2 = getValue(csline[3]);
     string opr = getValue(csline[2]);
     int linesTM = stoi(getValue(csline[4]));
+    string until = getValue(csline[5]);
     bool out = false;
 
     if (opr == "==") out = (in1 == in2);
@@ -201,6 +204,7 @@ void Interpreter::executeIfStatement(const vector<string>& csline) {
     else if (opr == "<=") out = (stof(in1) <= stof(in2));
     else cerr << "Line " << pc << " ; Invalid \'if\' operator." << endl;
     if (!out) {
+        pcLookingFor = "-<" + until;
         pc += linesTM;
     }
 
