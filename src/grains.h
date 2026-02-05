@@ -1,7 +1,12 @@
 #pragma once
-#include "interpreter.h"
-#include <vector>
-#include <string>
 
-class Interpreter;
+#include <string>
+#include <chrono>
+#include <vector>
+#include <unordered_map>
+#include <functional> 
+#include <iostream>
+string pcLookingFor;
+
+using namespace std;
 

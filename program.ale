@@ -1,31 +1,11 @@
 @SET_SPLAR?"`
 
 println`"Calculator Made with AleScript
-join`"Available operators: `HELP_BMATH_OPERATORS
-println`LAST_RETURNED
 
 @REP_IGNORE
 
-println`"
-
-    // Handle Inputs
-input`"Number 1: `
-var`num1
-input`"Operator: `
-var`sign
-input`"Number 2: `
-var`num2
-
-    // Handle Operation
-bmath`num1`sign`num2
-var`out
-if`out`"==`"INVALID_OPERATOR`"3
-join`"'`sign`"' is an invalid operator! Available operators: `HELP_BMATH_OPERATORS
-println`LAST_RETURNED
-
-    // Handle Output
-if`out`"!=`"INVALID_OPERATOR`"3
-join`num1`" `sign`" `num2`" = `out
-println`LAST_RETURNED
+println`"TEST
 
 @REP
+
+-<skipiffalse

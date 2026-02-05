@@ -32,6 +32,7 @@ public:
     void executeWebGet(const vector<string>& csline);
     void executeSystemsil(const vector<string>& csline);
     void executeGetFPS();
+    void executeJumpLines(const vector<string>& csline);
 
     string getValue(const string& s) const {
         if (!s.empty() && s.front() == '"') {
@@ -55,7 +56,6 @@ private:
     string lastReturned;
     char SPLAR;
     int pc;
-    int pcIgnore;
     int fpsFrames = 0;
     chrono::high_resolution_clock::time_point fpsLastTime = chrono::high_resolution_clock::now();
     float lastFPS = 0.0f;

@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include "grains.h"
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -7,101 +8,50 @@
 #include <sstream>
 #include <cmath>
 
-constexpr unsigned int hashStr(const char* str, unsigned int hash = 5381) {
-    return *str ? hashStr(str + 1, ((hash << 5) + hash) + *str) : hash;
-}
 using namespace std;
+
+// Command dispatcher table
+static const unordered_map<string, function<void(Interpreter*, const vector<string>&)>> commandDispatcher = {
+    {"print", [](Interpreter* self, const vector<string>& args) { self->executePrint(args); }},
+    {"println", [](Interpreter* self, const vector<string>& args) { self->executePrintln(args); }},
+    {"var", [](Interpreter* self, const vector<string>& args) { self->executeVar(args); }},
+    {"bmath", [](Interpreter* self, const vector<string>& args) { self->executeBMath(args); }},
+    {"input", [](Interpreter* self, const vector<string>& args) { self->executeInput(args); }},
+    {"@REP_IGNORE", [](Interpreter* self, const vector<string>& args) { self->executeRep(false); }},
+    {"@REP", [](Interpreter* self, const vector<string>& args) { self->executeRep(true); }},
+    {"@SET_SPLAR", [](Interpreter* self, const vector<string>& args) { self->executeSET_SPLAR(args); }},
+    {"fwrite", [](Interpreter* self, const vector<string>& args) { self->executeFWrite(args); }},
+    {"join", [](Interpreter* self, const vector<string>& args) { self->executeJoin(args); }},
+    {"system", [](Interpreter* self, const vector<string>& args) { self->executeSystem(args); }},
+    {"if", [](Interpreter* self, const vector<string>& args) { self->executeIfStatement(args); }},
+    {"round", [](Interpreter* self, const vector<string>& args) { self->executeRounding(args); }},
+    {"webget", [](Interpreter* self, const vector<string>& args) { self->executeWebGet(args); }},
+    {"getFps", [](Interpreter* self, const vector<string>& args) { self->executeGetFPS(); }},
+    {"jump", [](Interpreter* self, const vector<string>& args) { self->executeJumpLines(args); }},
+    {"exit", [](Interpreter* self, const vector<string>& args) { exit(0); }},
+};
 
 void Interpreter::executeLine(const string& line) {
     variables["LAST_RETURNED"] = lastReturned;
 
     auto csline = split(line, SPLAR);
-    if (csline.empty() || csline[0].rfind("//", 0) == 0) return;
+    if (!pcLookingFor.empty() && pcLookingFor!=line) csline.clear();
+    if (csline.empty() || csline[0].rfind("//", 0) == 0 || csline[0].rfind("-<", 0) == 0) return;
 
-    switch(hashStr(csline[0].c_str())) {
-        case hashStr("print"): {
-            executePrint(csline);
-            break;
-        }
-        case hashStr("println"): {
-            executePrintln(csline);
-            break;
-        }
-
-        case hashStr("var"): {
-            executeVar(csline);
-            break;
-        }
-
-        case hashStr("bmath"): {
-            executeBMath(csline);
-            break;
-        }
-
-        case hashStr("input"): {
-            executeInput(csline);
-            break;
-        }
-
-        case hashStr("@REP_IGNORE"): {
-            executeRep(false);
-            break;
-        } case hashStr("@REP"): {
-            executeRep(true);
-            break;
-        } case hashStr("@SET_SPLAR"): {
-            executeSET_SPLAR(csline);
-            break;
-        }
-        
-        case hashStr("fwrite"): {
-            executeFWrite(csline);
-            break;
-        }
-
-        case hashStr("join"): {
-            executeJoin(csline);
-            break;
-        }
-
-        case hashStr("system"): {
-            executeSystem(csline);
-            break;
-        }
-
-        case hashStr("if"): {
-            executeIfStatement(csline);
-            break;
-        }
-
-        case hashStr("round"): {
-            executeRounding(csline);
-            break;
-        }
-
-        case hashStr("webget"): {
-            executeWebGet(csline);
-            break;
-        }
-
-        case hashStr("getFps"): {
-            executeGetFPS();
-            break;
-        }
-
-        case hashStr("exit"): { exit(0); break; }
-
-        default: {
-            auto it = extraGrains.find(csline[0]);
-            if (it != extraGrains.end()) {
-                it->second(csline);
-            } else {
-                cerr << "Line " << pc << " ; Unknown grain > " << csline[0] << endl;
-            }
-            break;
-        }
+    auto it = commandDispatcher.find(csline[0]);
+    if (it != commandDispatcher.end()) {
+        it->second(this, csline);
+        return;
     }
 
+    auto extraIt = extraGrains.find(csline[0]);
+    if (extraIt != extraGrains.end()) {
+        extraIt->second(csline);
+        return;
+    }
+
+    // Unknown command
+    cerr << "Line " << pc << " ; Unknown grain > " << csline[0] << endl;
 }
 
 // println?<"value/var>
@@ -135,22 +85,18 @@ void Interpreter::executeBMath(const vector<string>& csline) {
         float in1 = strtof(getValue(csline[1]).c_str(), nullptr);
         string sign = getValue(csline[2]);
         float in2 = strtof(getValue(csline[3]).c_str(), nullptr);
-        string sout = "INVALID_OPERATOR";
         float out = numeric_limits<float>::quiet_NaN();
 
-        switch(hashStr(sign.c_str())) {
-            case hashStr("+"): out = in1 + in2; break;
-            case hashStr("-"): out = in1 - in2; break;
-            case hashStr("*"): out = in1 * in2; break;
-            case hashStr("/"): out = in1 / in2; break;
-            case hashStr("root"): out = pow(in1, 1.0 / in2); break;
-            case hashStr("powr"): out = pow(in1, in2); break;
-            default: break;
-        }
+        if (sign == "+") out = in1 + in2;
+        else if (sign == "-") out = in1 - in2;
+        else if (sign == "*") out = in1 * in2;
+        else if (sign == "/") out = in1 / in2;
+        else if (sign == "root") out = pow(in1, 1.0 / in2);
+        else if (sign == "powr") out = pow(in1, in2);
 
         ostringstream oss;
         if (!isnan(out)) oss << out;
-        else oss << sout;
+        else oss << "INVALID_OPERATOR";
         lastReturned = oss.str();
     } else {
         cerr << "Line " << pc << " ; Invalid 'bmath' format." << endl;
@@ -171,9 +117,9 @@ void Interpreter::executeInput(const vector<string>& csline) {
 // @REP ; @REP_IGNORE
 void Interpreter::executeRep(bool type) {
     if (type) { // @REP
-        pc = pcIgnore;
+        pc = stoi(variables["PC_IGNORE"]);
     } else {    // @REP_IGNORE
-        pcIgnore = pc;
+        variables["PC_IGNORE"] = to_string(pc);
     }
 }
 
@@ -227,7 +173,7 @@ void Interpreter::executeSystem(const vector<string>& csline) {
 
 // systemsil?<command>
 void Interpreter::executeSystemsil(const vector<string>& csline) {
-    std::string cmd = getValue(csline[1]);
+    string cmd = getValue(csline[1]);
     #ifdef _WIN32
         cmd += " > NUL 2>&1";
     #else
@@ -245,19 +191,19 @@ void Interpreter::executeIfStatement(const vector<string>& csline) {
     string in2 = getValue(csline[3]);
     string opr = getValue(csline[2]);
     int linesTM = stoi(getValue(csline[4]));
+    string until = "-<"+getValue(csline[5]);
     bool out = false;
 
-    switch (hashStr(opr.c_str())) {
-        case hashStr("=="): if (in1==in2)out=true; break;
-        case hashStr("!="): if (in1!=in2)out=true; break;
-        case hashStr(">"): if (stof(in1)>stof(in2))out=true; break;
-        case hashStr("<"): if (stof(in1)<stof(in2))out=true; break;
-        case hashStr(">="): if (stof(in1)>=stof(in2))out=true; break;
-        case hashStr("<="): if (stof(in1)<=stof(in2))out=true; break;
-        default: cerr << "Line " << pc << " ; Invalid \'if\' operator." << endl; break;
-    }
+    if (opr == "==") out = (in1 == in2);
+    else if (opr == "!=") out = (in1 != in2);
+    else if (opr == ">") out = (stof(in1) > stof(in2));
+    else if (opr == "<") out = (stof(in1) < stof(in2));
+    else if (opr == ">=") out = (stof(in1) >= stof(in2));
+    else if (opr == "<=") out = (stof(in1) <= stof(in2));
+    else cerr << "Line " << pc << " ; Invalid \'if\' operator." << endl;
     if (!out) {
-        pc = pc + linesTM;
+        if (!until.empty()) pcLookingFor = until;
+        else pc += linesTM;
     }
 
     lastReturned = out ? "true" : "false";
@@ -277,13 +223,13 @@ void Interpreter::executeRounding(const vector<string>& csline) {
 
 // webget?<url>?<path to save>
 void Interpreter::executeWebGet(const vector<string>& csline) {
-    std::string url = getValue(csline[1]);
-    std::string output = getValue(csline[2]);
+    string url = getValue(csline[1]);
+    string output = getValue(csline[2]);
 
     #ifdef _WIN32
-        std::string command = "curl -s -o \"" + output + "\" \"" + url + "\"";
+        string command = "curl -s -o \"" + output + "\" \"" + url + "\"";
     #else
-        std::string command = "wget -q -O \"" + output + "\" \"" + url + "\"";
+        string command = "wget -q -O \"" + output + "\" \"" + url + "\"";
     #endif
 
     system(command.c_str());
@@ -291,7 +237,7 @@ void Interpreter::executeWebGet(const vector<string>& csline) {
 
 
 void Interpreter::executeGetFPS() {
-    using namespace std::chrono;
+    using namespace chrono;
 
     fpsFrames++;
     auto now = high_resolution_clock::now();
@@ -303,5 +249,9 @@ void Interpreter::executeGetFPS() {
         fpsLastTime = now;
     }
 
-    lastReturned = std::to_string(lastFPS);
+    lastReturned = to_string(lastFPS);
+}
+
+void Interpreter::executeJumpLines(const vector<string>& csline) {
+    pc += stoi(getValue(csline[0]));
 }

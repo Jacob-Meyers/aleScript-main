@@ -4,7 +4,9 @@
 #include <sstream>
 #include <cctype>
 
+
 using namespace std;
+
 
 string getDirectory(const string& path) {
     size_t pos = path.find_last_of("/\\");
@@ -12,10 +14,11 @@ string getDirectory(const string& path) {
 }
 
 Interpreter::Interpreter(const string& programPath) 
-    : lastReturned("NULL"), SPLAR('?'), pc(0), pcIgnore(0) 
+    : lastReturned("NULL"), SPLAR('?'), pc(0)
 {
     variables["EMPTY"] = "";
-    variables["ALE_VERSION"] = "v1.1";
+    variables["PC_IGNORE"] = "0";
+    variables["ALE_VERSION"] = "v1.2";
     variables["ARG_PATH"] = getDirectory(programPath);
     variables["HELP_BMATH_OPERATORS"] = "+, -, *, /, root, powr";
     variables["HELP_IF_OPRS"] = "==, !=, >, <, >=, <=";
@@ -62,3 +65,4 @@ void Interpreter::trim(string& str) {
     while (!str.empty() && isspace(str.front())) str.erase(str.begin());
     while (!str.empty() && isspace(str.back())) str.pop_back();
 }
+
