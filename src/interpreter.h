@@ -9,8 +9,6 @@
 
 using namespace std;
 
-string aleversion;
-
 class Interpreter {
 public:
     Interpreter(const string& programPath);

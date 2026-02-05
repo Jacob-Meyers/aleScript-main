@@ -18,7 +18,6 @@ Interpreter::Interpreter(const string& programPath)
 {
     variables["EMPTY"] = "";
     variables["PC_IGNORE"] = "0";
-    variables["ALE_VERSION"] = aleversion;
     variables["ARG_PATH"] = getDirectory(programPath);
     variables["HELP_BMATH_OPERATORS"] = "+, -, *, /, root, powr";
     variables["HELP_IF_OPRS"] = "==, !=, >, <, >=, <=";
