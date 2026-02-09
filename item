@@ -1,0 +1,10 @@
+{
+"modItemId": modItemId",
+"filename": filename",
+"itemCanPlace": itemCanPlace",
+"itemSoundPlace": itemSoundPlace",
+"use": {
+"type": useType",
+"value": useValue",
+},
+}

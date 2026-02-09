@@ -68,7 +68,11 @@ void Interpreter::executePrintln(const vector<string>& csline) {
         cerr << "Line " << pc << " ; Invalid 'println' format" << endl;
         exit(0);
     }
-    cout << getValue(csline[1]) << endl;
+    for (int i=1;i<csline.size();i++) {
+        string val = getValue(csline[i]);
+        cout << val << endl;
+        //cout << (!val.empty() || (val.empty() && i==csline.size())?"\n":"");
+    }
 }
 
 // var?<var name>?<var value>   ---   ?<var value> <-- Optional

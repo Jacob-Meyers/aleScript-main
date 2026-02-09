@@ -1,0 +1,11 @@
+{
+"modItemId": modItemId",
+"filename": filename_injson",
+"name": name",
+"itemCanPlace": itemCanPlace",
+"itemSoundPlace": itemSoundPlace",
+"use": {
+"type": useType",
+"value": useValue",
+},
+}

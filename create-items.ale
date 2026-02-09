@@ -1,0 +1,75 @@
+println?"Flintforge Mod data creator.?"Made By TeamJEM
+
+@REP_IGNORE
+
+println?"
+
+//input?"Type (item, recipe) > ?
+var?type_input?"item
+
+// ITEM
+
+if?type_input?"==?"item?"0?"endif
+
+input?"modItemId > ?
+var?modItemId
+
+input?"filename > ?
+var?filename_injson
+join?filename_injson?".json
+var?filename
+
+input?"name > ?
+var?name
+
+input?"itemCanPlace > ?
+var?itemCanPlace
+
+input?"itemSoundPlace > ?
+var?itemSoundPlace
+
+input?"use:type > ?
+var?useType
+input?"use:value > ?
+var?useValue
+
+input?"textureBaseFolder (keep empty to skip) > ?
+var?textureBaseFolder
+input?"textureExtensionFolder (keep empty to skip) > ?
+var?textureExtensionFolder
+
+fwrite?filename?"w?"{
+join?""modItemId": ?"modItemId?"", 
+fwrite?filename?"a?LAST_RETURNED
+
+join?""filename": ?"filename_injson?"", 
+fwrite?filename?"a?LAST_RETURNED
+
+join?""name": ?"name?"", 
+fwrite?filename?"a?LAST_RETURNED
+
+join?""itemCanPlace": ?"itemCanPlace?"", 
+fwrite?filename?"a?LAST_RETURNED
+
+join?""itemSoundPlace": ?"itemSoundPlace?"", 
+fwrite?filename?"a?LAST_RETURNED
+
+fwrite?filename?"a?""use": {
+join?""type": ?"useType?"", 
+fwrite?filename?"a?LAST_RETURNED
+join?""value": ?"useValue?"", 
+fwrite?filename?"a?LAST_RETURNED
+fwrite?filename?"a?"},
+
+if?textureBaseFolder?"!=?EMPTY?"4
+join?""textureBaseFolder": ?"textureBaseFolder?"", 
+fwrite?filename?"a?LAST_RETURNED
+join?""textureExtensionFolder": ?"textureExtensionFolder?"", 
+fwrite?filename?"a?LAST_RETURNED
+
+fwrite?filename?"a?"}
+
+-<endif
+
+
+@REP
